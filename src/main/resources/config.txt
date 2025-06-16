@@ -7,11 +7,11 @@ startMonth=1
 #订单时间开始天数
 startDay=1
 #客户数
-customerCount=50000
+customerCount=500000
 #销售数
-salesStaffCount=20000
+salesStaffCount=200000
 #合同数
-contractCount=2000000
+contractCount=20000000
 #商品数
 itemCount=100000
 #商品价格上限
@@ -21,9 +21,9 @@ contractDetailLimit=20
 #合同明细商品最大数量
 itemQuantityLimit=100
 #将生成的数据保存到哪个MySQL
-mysql.url=jdbc:mysql://192.168.251.131:3306/demo?useUnicode=true&characterEncoding=utf8
+mysql.url=jdbc:mysql://mysql-test.default:3306/demo?useUnicode=true&characterEncoding=utf8
 mysql.user=root
-mysql.password=root
+mysql.password=123456
 mysql.pageSize=10000
 #将MySQL里面的数据查出来组装成JSON文档后索引到哪个ES
 es.host=192.168.251.131

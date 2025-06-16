@@ -17,7 +17,7 @@ import java.sql.*;
 public class MySQLUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(MySQLUtils.class);
 
-    private static final String DRIVER = "com.mysql.jdbc.Driver";
+    private static final String DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String URL = Config.getStringValue("mysql.url") == null ? "jdbc:mysql://192.168.252.193:3306/demo?useUnicode=true&characterEncoding=utf8" : Config.getStringValue("mysql.url");
     private static final String USER = Config.getStringValue("mysql.user") == null ? "root" : Config.getStringValue("mysql.user");
     private static final String PASSWORD = Config.getStringValue("mysql.password") == null ? "root" : Config.getStringValue("mysql.password");
@@ -36,17 +36,17 @@ public class MySQLUtils {
     private MySQLUtils() {
     }
 
-    public static int getCount(String table){
+    public static int getCount(String table) {
         Connection con = MySQLUtils.getConnection();
-        if(con == null){
+        if (con == null) {
             return 0;
         }
         PreparedStatement pst = null;
         ResultSet rs = null;
-        try{
-            pst = con.prepareStatement("select count(1) from "+table);
+        try {
+            pst = con.prepareStatement("select count(1) from " + table);
             rs = pst.executeQuery();
-            if(rs.next()){
+            if (rs.next()) {
                 return rs.getInt(1);
             }
         } catch (Exception e) {
@@ -57,19 +57,19 @@ public class MySQLUtils {
         return 0;
     }
 
-    public static void clean(String table){
+    public static void clean(String table) {
         Connection con = getConnection();
-        if(con == null){
-            return ;
+        if (con == null) {
+            return;
         }
         PreparedStatement pst = null;
         ResultSet rs = null;
         try {
-            pst = con.prepareStatement("delete from "+table);
+            pst = con.prepareStatement("delete from " + table);
             pst.execute();
-            LOGGER.info("清理数据成功, table: "+table);
+            LOGGER.info("清理数据成功, table: " + table);
         } catch (Exception e) {
-            LOGGER.error("清理数据失败, table: "+table, e);
+            LOGGER.error("清理数据失败, table: " + table, e);
         } finally {
             close(con, pst, rs);
         }

@@ -25,7 +25,7 @@ public class ContractDetailGenerator {
 
     public static void generate(int contractCount, int contractDetailLimit, int itemQuantityLimit, Map<Integer, Float> items, List<String> dayStrs, int batchSize) {
         // 获取可用处理器核心数，作为线程池大小
-        int threadCount = 64;
+        int threadCount = 512;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = contractCount / threadCount;

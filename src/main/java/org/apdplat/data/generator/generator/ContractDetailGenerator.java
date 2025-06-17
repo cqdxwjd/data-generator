@@ -129,6 +129,8 @@ public class ContractDetailGenerator {
             con.prepareStatement("update contract set contract_price=" + totalPrice + " where id=" + contractId).executeUpdate();
         } catch (Exception e) {
             LOGGER.error("更新合同总价失败，合同ID: {}", contractId, e);
+        } finally {
+            MySQLUtils.close(con);
         }
     }
 }

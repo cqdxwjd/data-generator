@@ -7,13 +7,13 @@ startMonth=1
 #订单时间开始天数
 startDay=1
 #客户数
-customerCount=5000
+customerCount=500000
 #销售数
-salesStaffCount=200
+salesStaffCount=200000
 #合同数
-contractCount=100000
+contractCount=100000000
 #商品数
-itemCount=1000
+itemCount=100000
 #商品价格上限
 priceLimit=1000
 #合同最大明细数

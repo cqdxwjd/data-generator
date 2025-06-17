@@ -14,8 +14,11 @@
  Date: 04/24/2018 10:00:52 AM
 */
 
+create database if not exists demo;
+use demo;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
 
 -- ----------------------------
 --  Table structure for `area`

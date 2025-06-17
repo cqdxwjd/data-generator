@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: data-generator-job
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      nodeSelector:
+        kubernetes.io/hostname: hmfbd01
+      containers:
+        - name: data-generator
+          # 替换为实际的镜像地址
+          image: hub.hmf.xyz/base/data-generator:1.0.0
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              memory: 2Gi

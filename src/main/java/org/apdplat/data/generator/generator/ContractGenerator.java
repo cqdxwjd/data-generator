@@ -21,59 +21,87 @@ public class ContractGenerator {
 
     private static final List<String> STATES = Arrays.asList("新建", "签订", "生效", "履行中", "终止", "作废");
 
-    public static void clear(){
+    public static void clear() {
         MySQLUtils.clean("contract");
     }
 
-    public static void generate(int contractCount, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize){
+    public static void generate(int contractCount, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize) {
         generate(0, contractCount, dayStrs, customerCount, salesStaffCount, batchSize);
     }
 
-    public static void generate(int start, int contractCount, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize){
-        Connection con = MySQLUtils.getConnection();
-        if(con == null){
-            return ;
+    public static void generate(int start, int contractCount, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize) {
+        // 定义小事务的大小，可根据实际情况调整
+        int transactionSize = 1000;
+        Random random = new Random();
+        for (int transactionStart = start; transactionStart < contractCount; transactionStart += transactionSize) {
+            int transactionEnd = Math.min(transactionStart + transactionSize, contractCount);
+            executeTransaction(transactionStart, transactionEnd, dayStrs, customerCount, salesStaffCount, batchSize, random);
         }
+    }
+
+    private static void executeTransaction(int start, int end, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize, Random random) {
+        Connection con = MySQLUtils.getConnection();
+        if (con == null) {
+            LOGGER.warn("无法获取数据库连接，退出数据生成，范围: {} - {}", start, end);
+            return;
+        }
+
         PreparedStatement pst = null;
-        ResultSet rs = null;
-        String sql = "insert into contract (id, contract_price, state, sign_day, sales_staff_id, customer_id) values(?, ?, ?, ?, ?, ?);";
+        String sql = "insert into contract (id, contract_price, state, sign_day, sales_staff_id, customer_id) values(?, ?, ?, ?, ?, ?)";
+
         try {
             con.setAutoCommit(false);
             pst = con.prepareStatement(sql);
-            for(int i=start; i<contractCount; i++){
-                int r = new Random(System.nanoTime()).nextInt(dayStrs.size());
-                String dayStr = dayStrs.get(r);
-                r = new Random(System.nanoTime()).nextInt(STATES.size());
-                String state = STATES.get(r);
-                int sales_staff_id = new Random(System.nanoTime()).nextInt(salesStaffCount)+1;
-                int customer_id = new Random(System.nanoTime()).nextInt(customerCount)+1;
-                int contractId = i+1;
+
+            for (int i = start; i < end; i++) {
+                int dayIndex = random.nextInt(dayStrs.size());
+                String dayStr = dayStrs.get(dayIndex);
+
+                int stateIndex = random.nextInt(STATES.size());
+                String state = STATES.get(stateIndex);
+
+                int salesStaffId = random.nextInt(salesStaffCount) + 1;
+                int customerId = random.nextInt(customerCount) + 1;
+
+                int contractId = i + 1;
+
                 pst.setInt(1, contractId);
                 pst.setFloat(2, 0);
                 pst.setString(3, state);
                 pst.setString(4, dayStr);
-                pst.setInt(5, sales_staff_id);
-                pst.setInt(6, customer_id);
+                pst.setInt(5, salesStaffId);
+                pst.setInt(6, customerId);
+
                 pst.addBatch();
 
-                if((i+1) % batchSize == 0) {
+                if ((i + 1) % batchSize == 0) {
                     pst.executeBatch();
+//                    LOGGER.info("已批量插入 {} 条记录，范围: {} - {}", batchSize, start, end);
                 }
             }
+
+            // 执行剩余的批量插入
             pst.executeBatch();
             con.commit();
-            LOGGER.info("保存到数据库成功");
+//            LOGGER.info("最终批量插入 {} 条记录，保存到数据库成功，范围: {} - {}", end - start, start, end);
         } catch (Exception e) {
-            LOGGER.error("保存到数据库失败", e);
+            try {
+                if (con != null) {
+                    con.rollback();
+                }
+            } catch (Exception rollbackEx) {
+                LOGGER.error("回滚事务失败，范围: {} - {}", start, end, rollbackEx);
+            }
+            LOGGER.error("保存到数据库失败，范围: {} - {}", start, end, e);
         } finally {
-            MySQLUtils.close(con, pst, rs);
+            MySQLUtils.close(con, pst, null);
         }
     }
 
     private static List<String> getDayStrs() {
         List<String> dayStrs = new ArrayList<>();
         Connection con = MySQLUtils.getConnection();
-        if(con == null){
+        if (con == null) {
             return dayStrs;
         }
         PreparedStatement pst = null;

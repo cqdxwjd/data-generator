@@ -17,36 +17,36 @@ import java.util.Random;
 public class SalesStaffGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(SalesStaffGenerator.class);
 
-    public static void clear(){
+    public static void clear() {
         MySQLUtils.clean("sales_staff");
     }
 
-    public static List<String> generate(int areaCount, int customerCount, int batchSize){
+    public static List<String> generate(int areaCount, int customerCount, int batchSize) {
         return generate(areaCount, customerCount, batchSize, null);
     }
-    public static List<String> generate(int areaCount, int salesStaffCount, int batchSize, Collection<String> exclude){
+
+    public static List<String> generate(int areaCount, int salesStaffCount, int batchSize, Collection<String> exclude) {
         Connection con = MySQLUtils.getConnection();
-        if(con == null){
+        if (con == null) {
             return null;
         }
         List<String> names = PeopleNames.getNames(salesStaffCount);
         PreparedStatement pst = null;
         ResultSet rs = null;
-        String sql = "insert into sales_staff (id, name, gender, area_id) values(?, ?, ?, ?);";
+        String sql = "insert into sales_staff (name, gender, area_id) values(?, ?, ?);";
         try {
             con.setAutoCommit(false);
             pst = con.prepareStatement(sql);
-            for(int i=0; i<names.size(); i++){
+            for (int i = 0; i < names.size(); i++) {
                 int r = new Random(System.nanoTime()).nextInt(names.size());
-                int area_id = new Random(System.nanoTime()).nextInt(areaCount)+1;
-                String gender = r > names.size()/2 ? "男" : "女";
-                pst.setInt(1, i+1);
-                pst.setString(2, names.get(i));
-                pst.setString(3, gender);
-                pst.setInt(4, area_id);
+                int area_id = new Random(System.nanoTime()).nextInt(areaCount) + 1;
+                String gender = r > names.size() / 2 ? "男" : "女";
+                pst.setString(1, names.get(i));
+                pst.setString(2, gender);
+                pst.setInt(3, area_id);
                 pst.addBatch();
 
-                if((i+1) % batchSize == 0) {
+                if ((i + 1) % batchSize == 0) {
                     pst.executeBatch();
                 }
             }

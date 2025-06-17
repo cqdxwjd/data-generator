@@ -81,7 +81,7 @@ public class ContractGenerator {
             }
             PreparedStatement pst = null;
             ResultSet rs = null;
-            String sql = "insert into contract (id, contract_price, state, sign_day, sales_staff_id, customer_id) values(?, ?, ?, ?, ?, ?);";
+            String sql = "insert into contract (contract_price, state, sign_day, sales_staff_id, customer_id) values(?, ?, ?, ?, ?);";
             try {
                 con.setAutoCommit(false);
                 pst = con.prepareStatement(sql);
@@ -93,12 +93,11 @@ public class ContractGenerator {
                     int salesStaffId = random.nextInt(salesStaffCount) + 1;
                     int customerId = random.nextInt(customerCount) + 1;
                     int contractId = i + 1;
-                    pst.setInt(1, contractId);
-                    pst.setFloat(2, 0);
-                    pst.setString(3, state);
-                    pst.setString(4, dayStr);
-                    pst.setInt(5, salesStaffId);
-                    pst.setInt(6, customerId);
+                    pst.setFloat(1, 0);
+                    pst.setString(2, state);
+                    pst.setString(3, dayStr);
+                    pst.setInt(4, salesStaffId);
+                    pst.setInt(5, customerId);
                     pst.addBatch();
 
                     if ((i + 1) % batchSize == 0) {

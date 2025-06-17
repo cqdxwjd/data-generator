@@ -64,7 +64,7 @@ CREATE TABLE `category`
 DROP TABLE IF EXISTS `contract`;
 CREATE TABLE `contract`
 (
-    `id`             int(11)        NOT NULL,
+    `id`             int(11)        NOT NULL AUTO_INCREMENT,
     `contract_price` decimal(10, 0) NOT NULL,
     `state`          varchar(50)    NOT NULL,
     `sign_day`       varchar(19)    NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE `item`
 DROP TABLE IF EXISTS `sales_staff`;
 CREATE TABLE `sales_staff`
 (
-    `id`      int(11)      NOT NULL,
+    `id`      int(11)      NOT NULL AUTO_INCREMENT,
     `name`    varchar(255) NOT NULL,
     `gender`  varchar(10)  NOT NULL,
     `area_id` int(11) DEFAULT NULL,

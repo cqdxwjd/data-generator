@@ -111,7 +111,7 @@ CREATE TABLE `contract_detail`
 DROP TABLE IF EXISTS `customer`;
 CREATE TABLE `customer`
 (
-    `id`      int(11)      NOT NULL,
+    `id`      int(11)      NOT NULL AUTO_INCREMENT,
     `age`     int(11)      NOT NULL,
     `name`    varchar(255) NOT NULL,
     `gender`  varchar(10)  NOT NULL,

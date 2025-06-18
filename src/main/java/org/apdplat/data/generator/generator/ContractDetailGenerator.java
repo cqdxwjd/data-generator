@@ -24,8 +24,8 @@ public class ContractDetailGenerator {
     }
 
     public static void generate(int contractCount, int contractDetailLimit, int itemQuantityLimit, Map<Integer, Float> items, List<String> dayStrs, int batchSize) {
-        // 获取可用处理器核心数，作为线程池大小
-        int threadCount = 512;
+        // 设置为数据库连接池数量的1倍以上
+        int threadCount = 32;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = contractCount / threadCount;
@@ -129,8 +129,6 @@ public class ContractDetailGenerator {
             con.prepareStatement("update contract set contract_price=" + totalPrice + " where id=" + contractId).executeUpdate();
         } catch (Exception e) {
             LOGGER.error("更新合同总价失败，合同ID: {}", contractId, e);
-        } finally {
-            MySQLUtils.close(con);
         }
     }
 }

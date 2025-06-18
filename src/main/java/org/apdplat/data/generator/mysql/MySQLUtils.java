@@ -1,6 +1,7 @@
 package org.apdplat.data.generator.mysql;
 
 
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.apdplat.data.generator.utils.Config;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
@@ -111,8 +112,14 @@ public class MySQLUtils {
         // We'll use a GenericObjectPool instance, although
         // any ObjectPool implementation will suffice.
         //
+        // 配置连接池参数
+        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        poolConfig.setMaxTotal(16); // 最大连接数等于cpu个数，避免连接数过多导致cpu占用过高以及切换连接过多导致的性能下降
+        poolConfig.setMaxIdle(16);  // 最大空闲连接数
+        poolConfig.setMinIdle(8);   // 最小空闲连接数
+
         ObjectPool<PoolableConnection> connectionPool =
-                new GenericObjectPool<>(poolableConnectionFactory);
+                new GenericObjectPool<>(poolableConnectionFactory, poolConfig);
 
         // Set the factory's pool property to the owning pool
         poolableConnectionFactory.setPool(connectionPool);

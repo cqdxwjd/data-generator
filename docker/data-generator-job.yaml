@@ -20,3 +20,11 @@ spec:
             requests:
               cpu: 8000m
               memory: 4Gi
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /app/logs
+      volumes:
+        - name: logs-volume
+          hostPath:
+            path: /data2/generator-logs  # 宿主机上的存储路径，可按需修改
+            type: DirectoryOrCreate

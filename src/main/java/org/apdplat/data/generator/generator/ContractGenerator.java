@@ -33,9 +33,8 @@ public class ContractGenerator {
     }
 
     public static void generate(int start, int contractCount, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize) {
-        // 获取可用处理器核心数，作为线程池大小
-//        int threadCount = Runtime.getRuntime().availableProcessors();
-        int threadCount = 256;
+        // 设置为数据库连接池数量的1倍以上
+        int threadCount = 32;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = (contractCount - start) / threadCount;
@@ -92,7 +91,6 @@ public class ContractGenerator {
                     String state = STATES.get(r);
                     int salesStaffId = random.nextInt(salesStaffCount) + 1;
                     int customerId = random.nextInt(customerCount) + 1;
-                    int contractId = i + 1;
                     pst.setFloat(1, 0);
                     pst.setString(2, state);
                     pst.setString(3, dayStr);

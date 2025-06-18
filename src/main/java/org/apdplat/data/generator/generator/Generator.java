@@ -16,7 +16,6 @@ public class Generator {
     private static final Logger LOGGER = LoggerFactory.getLogger(Generator.class);
 
     public static void run() {
-        long start = System.currentTimeMillis();
         ////清除数据
         ContractDetailGenerator.clear();
         ContractGenerator.clear();
@@ -28,6 +27,7 @@ public class Generator {
         CategoryGenerator.clear();
         BrandGenerator.clear();
 
+        long start = System.currentTimeMillis();
         int batchSize = Config.getIntValue("batchSize") == -1 ? 1000 : Config.getIntValue("batchSize");
         ////起始年月日
         int startYear = Config.getIntValue("startYear") == -1 ? 2000 : Config.getIntValue("startYear");
@@ -65,7 +65,7 @@ public class Generator {
         ContractDetailGenerator.generate(contractCount, contractDetailLimit, itemQuantityLimit, items, dayStrs, batchSize);
         dayStrs.clear();
         items.clear();
-        LOGGER.info("数据生成耗时: {}", TimeUtils.getTimeDes(System.currentTimeMillis()-start));
+        LOGGER.info("数据生成耗时: {}", TimeUtils.getTimeDes(System.currentTimeMillis() - start));
     }
 
     public static void main(String[] args) {

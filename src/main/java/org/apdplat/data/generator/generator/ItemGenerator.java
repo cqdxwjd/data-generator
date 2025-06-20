@@ -21,39 +21,40 @@ public class ItemGenerator {
 
     private static final List<String> COLORS = MultiResourcesUtils.load("color.txt");
 
-    public static void clear(){
+    public static void clear() {
         MySQLUtils.clean("item");
     }
 
-    public static Map<Integer, Float> generate(int itemCount, int batchSize, int priceLimit, int categoryCount, int brandCount){
+    public static Map<Integer, Float> generate(int itemCount, int batchSize, int priceLimit, int categoryCount, int brandCount) {
         Map<Integer, Float> map = new HashMap<>();
         Connection con = MySQLUtils.getConnection();
-        if(con == null){
+        if (con == null) {
             return map;
         }
         PreparedStatement pst = null;
         ResultSet rs = null;
         String sql = "insert into item (id, name, price, category_id, brand_id, discount, color) values(?, ?, ?, ?, ?, ?, ?);";
+        Random random = new Random(System.nanoTime());
         try {
             con.setAutoCommit(false);
             pst = con.prepareStatement(sql);
-            for(int i=0; i<itemCount; i++){
-                int category_id = new Random(System.nanoTime()).nextInt(categoryCount)+1;
-                int brand_id = new Random(System.nanoTime()).nextInt(brandCount)+1;
-                double discount = (new Random(System.nanoTime()).nextInt(5)+5)/10.0;
-                int color_index = new Random(System.nanoTime()).nextInt(COLORS.size());
+            for (int i = 0; i < itemCount; i++) {
+                int category_id = random.nextInt(categoryCount) + 1;
+                int brand_id = random.nextInt(brandCount) + 1;
+                double discount = (random.nextInt(5) + 5) / 10.0;
+                int color_index = random.nextInt(COLORS.size());
                 String color = COLORS.get(color_index);
-                float price = Float.parseFloat(new Random(System.nanoTime()).nextInt(priceLimit)+1+"."+new Random(System.nanoTime()).nextInt(10)+new Random(System.nanoTime()).nextInt(10));
-                pst.setInt(1, i+1);
-                pst.setString(2, "商品"+(i+1));
+                float price = Float.parseFloat(random.nextInt(priceLimit) + 1 + "." + random.nextInt(10) + random.nextInt(10));
+                pst.setInt(1, i + 1);
+                pst.setString(2, "商品" + (i + 1));
                 pst.setFloat(3, price);
                 pst.setInt(4, category_id);
                 pst.setInt(5, brand_id);
-                pst.setFloat(6, (float)discount);
+                pst.setFloat(6, (float) discount);
                 pst.setString(7, color);
                 pst.addBatch();
-                map.put(i+1, price);
-                if((i+1) % batchSize == 0) {
+                map.put(i + 1, price);
+                if ((i + 1) % batchSize == 0) {
                     pst.executeBatch();
                 }
             }

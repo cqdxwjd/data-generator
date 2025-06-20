@@ -15,36 +15,37 @@ public class PeopleNames {
     private static List<String> NAMES = new ArrayList<>();
 
     static {
-        MultiResourcesUtils.load("names.txt").stream().filter(name->name.length()==3).distinct().forEach(NAMES::add);
+        MultiResourcesUtils.load("names.txt").stream().filter(name -> name.length() == 3).distinct().forEach(NAMES::add);
         LOGGER.info("人名加载完毕, 人名个数: {}", NAMES.size());
     }
 
-    public static void clear(){
+    public static void clear() {
         NAMES.clear();
     }
 
-    public static List<String> getNames(int count){
+    public static List<String> getNames(int count) {
         return getNames(count, null);
     }
 
-    public static List<String> getNames(int count, Collection<String> exclude){
-        if(count == NAMES.size()){
+    public static List<String> getNames(int count, Collection<String> exclude) {
+        if (count == NAMES.size()) {
             return Collections.unmodifiableList(NAMES);
         }
-        if(count > NAMES.size()){
-            throw new RuntimeException("指定的人数过多, 不能大于: "+NAMES.size());
+        if (count > NAMES.size()) {
+            throw new RuntimeException("指定的人数过多, 不能大于: " + NAMES.size());
         }
         //如何在M个人名中随机地选择N个?
         long start = System.currentTimeMillis();
         Set<String> data = new HashSet<>();
-        while(data.size()<count){
+        Random random = new Random(System.nanoTime());
+        while (data.size() < count) {
             long cost = System.currentTimeMillis() - start;
-            if(cost > 60000){
+            if (cost > 60000) {
                 break;
             }
-            int index = new Random(System.nanoTime()).nextInt(NAMES.size());
+            int index = random.nextInt(NAMES.size());
             String name = NAMES.get(index);
-            if(exclude == null || !exclude.contains(name)){
+            if (exclude == null || !exclude.contains(name)) {
                 data.add(name);
             }
         }

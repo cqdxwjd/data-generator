@@ -30,7 +30,7 @@ public class CustomerGenerator {
 
     public static List<String> generate(int areaCount, int customerCount, int batchSize, Collection<String> exclude) {
         List<String> names = PeopleNames.getNames(customerCount);
-        int threadCount = 32;
+        int threadCount = 5;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = customerCount / threadCount;
@@ -91,7 +91,19 @@ public class CustomerGenerator {
                     pst.addBatch();
 
                     if ((i + 1 - start) % batchSize == 0) {
-                        pst.executeBatch();
+                        try {
+                            pst.executeBatch();
+                            // 手动清空批处理命令（部分驱动可能需要）
+                            pst.clearBatch();
+                        } catch (Exception e) {
+                            try {
+                                con.rollback();
+                                pst.clearBatch(); // 异常时也清空批处理命令
+                            } catch (Exception rollbackEx) {
+                                LOGGER.error("线程 {} 回滚失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, rollbackEx);
+                            }
+                            LOGGER.error("线程 {} 执行批处理失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, e);
+                        }
                     }
                 }
                 pst.executeBatch();

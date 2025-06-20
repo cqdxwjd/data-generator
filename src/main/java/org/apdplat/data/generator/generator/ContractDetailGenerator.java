@@ -24,8 +24,7 @@ public class ContractDetailGenerator {
     }
 
     public static void generate(int contractCount, int contractDetailLimit, int itemQuantityLimit, Map<Integer, Float> items, List<String> dayStrs, int batchSize) {
-        // 设置为数据库连接池数量的1倍以上
-        int threadCount = 32;
+        int threadCount = 3000;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = contractCount / threadCount;
@@ -54,6 +53,7 @@ public class ContractDetailGenerator {
         private final List<String> dayStrs;
         private final int batchSize;
         private final Random random = new Random(System.nanoTime());
+        private final Set<Integer> itemUsed = new HashSet<>();
 
         InsertTask(int start, int end, int contractDetailLimit, int itemQuantityLimit, Map<Integer, Float> items, List<String> dayStrs, int batchSize) {
             this.start = start;
@@ -67,66 +67,76 @@ public class ContractDetailGenerator {
 
         @Override
         public void run() {
-            Connection con = MySQLUtils.getConnection();
-            if (con == null) {
-                return;
-            }
-            PreparedStatement pst = null;
-            ResultSet rs = null;
-            try {
+            try (Connection con = MySQLUtils.getConnection()) {
+                if (con == null) {
+                    return;
+                }
                 con.setAutoCommit(false);
                 String sql = "insert into contract_detail (item_id, item_quantity, detail_price, contract_id, sign_day) values(?, ?, ?, ?, ?);";
-                pst = con.prepareStatement(sql);
-                for (int j = start; j < end; j++) {
-                    int contractId = j;
-                    float totalPrice = 0;
-                    int len = random.nextInt(contractDetailLimit) + 1;
-                    Set<Integer> itemUsed = new HashSet<>();
-                    for (int i = 0; i < len; i++) {
-                        int r = random.nextInt(dayStrs.size());
-                        String dayStr = dayStrs.get(r);
-                        int itemId = random.nextInt(items.size()) + 1;
-                        while (itemUsed.contains(itemId)) {
-                            itemId = random.nextInt(items.size()) + 1;
-                        }
-                        itemUsed.add(itemId);
-                        int itemQuantity = random.nextInt(itemQuantityLimit) + 1;
-                        float detailPrice = items.get(itemId) * itemQuantity;
-                        totalPrice += detailPrice;
-                        pst.setInt(1, itemId);
-                        pst.setInt(2, itemQuantity);
-                        pst.setFloat(3, detailPrice);
-                        pst.setInt(4, contractId);
-                        pst.setString(5, dayStr);
-                        pst.addBatch();
+                try (PreparedStatement pst = con.prepareStatement(sql)) {
+                    for (int j = start; j < end; j++) {
+                        itemUsed.clear();
+                        float totalPrice = 0;
+                        int len = random.nextInt(contractDetailLimit) + 1;
+                        for (int i = 0; i < len; i++) {
+                            int r = random.nextInt(dayStrs.size());
+                            String dayStr = dayStrs.get(r);
+                            int itemId = random.nextInt(items.size()) + 1;
+                            while (itemUsed.contains(itemId)) {
+                                itemId = random.nextInt(items.size()) + 1;
+                            }
+                            itemUsed.add(itemId);
+                            int itemQuantity = random.nextInt(itemQuantityLimit) + 1;
+                            float detailPrice = items.get(itemId) * itemQuantity;
+                            totalPrice += detailPrice;
+                            pst.setInt(1, itemId);
+                            pst.setInt(2, itemQuantity);
+                            pst.setFloat(3, detailPrice);
+                            pst.setInt(4, j);
+                            pst.setString(5, dayStr);
+                            pst.addBatch();
 
-                        if ((i + 1) % batchSize == 0) {
-                            pst.executeBatch();
+                            if ((i + 1) % batchSize == 0) {
+                                try {
+                                    pst.executeBatch();
+                                    // 手动清空批处理命令（部分驱动可能需要）
+                                    pst.clearBatch();
+                                } catch (Exception e) {
+                                    try {
+                                        con.rollback();
+                                        pst.clearBatch(); // 异常时也清空批处理命令
+                                    } catch (Exception rollbackEx) {
+                                        LOGGER.error("线程 {} 回滚失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, rollbackEx);
+                                    }
+                                    LOGGER.error("线程 {} 执行批处理失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, e);
+                                }
+                            }
                         }
+                        updateContractPrice(con, j, totalPrice);
                     }
-                    updateContractPrice(con, contractId, totalPrice);
-                }
-                pst.executeBatch();
-                con.commit();
-                LOGGER.info("线程 {} 插入完成，范围: {} - {}", Thread.currentThread().getName(), start, end - 1);
-            } catch (Exception e) {
-                try {
-                    if (con != null) {
+                    pst.executeBatch();
+                    con.commit();
+                    LOGGER.info("线程 {} 插入完成，范围: {} - {}", Thread.currentThread().getName(), start, end - 1);
+                } catch (Exception e) {
+                    try {
                         con.rollback();
+                    } catch (Exception rollbackEx) {
+                        LOGGER.error("线程 {} 回滚失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, rollbackEx);
                     }
-                } catch (Exception rollbackEx) {
-                    LOGGER.error("线程 {} 回滚失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, rollbackEx);
+                    LOGGER.error("线程 {} 插入失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, e);
                 }
-                LOGGER.error("线程 {} 插入失败，范围: {} - {}", Thread.currentThread().getName(), start, end - 1, e);
-            } finally {
-                MySQLUtils.close(con, pst, rs);
+            } catch (Exception e) {
+                LOGGER.error("获取数据库连接失败", e);
             }
         }
     }
 
     private static void updateContractPrice(Connection con, int contractId, float totalPrice) {
-        try {
-            con.prepareStatement("update contract set contract_price=" + totalPrice + " where id=" + contractId).executeUpdate();
+        String sql = "update contract set contract_price = ? where id = ?";
+        try (PreparedStatement pst = con.prepareStatement(sql)) {
+            pst.setFloat(1, totalPrice);
+            pst.setInt(2, contractId);
+            pst.executeUpdate();
         } catch (Exception e) {
             LOGGER.error("更新合同总价失败，合同ID: {}", contractId, e);
         }

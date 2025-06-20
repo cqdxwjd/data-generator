@@ -30,7 +30,7 @@ public class SalesStaffGenerator {
 
     public static List<String> generate(int areaCount, int salesStaffCount, int batchSize, Collection<String> exclude) {
         List<String> names = PeopleNames.getNames(salesStaffCount);
-        int threadCount = 32;
+        int threadCount = 2;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = salesStaffCount / threadCount;
@@ -80,12 +80,9 @@ public class SalesStaffGenerator {
                 pst = con.prepareStatement(sql);
                 Random random = new Random(System.nanoTime());
                 for (int i = start; i < end; i++) {
-                    int r = random.nextInt(names.size());
-                    int area_id = random.nextInt(areaCount) + 1;
-                    String gender = r > names.size() / 2 ? "男" : "女";
                     pst.setString(1, names.get(i));
-                    pst.setString(2, gender);
-                    pst.setInt(3, area_id);
+                    pst.setString(2, random.nextInt(names.size()) > names.size() / 2 ? "男" : "女");
+                    pst.setInt(3, random.nextInt(areaCount) + 1);
                     pst.addBatch();
 
                     if ((i + 1 - start) % batchSize == 0) {

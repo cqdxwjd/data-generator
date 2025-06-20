@@ -33,8 +33,7 @@ public class ContractGenerator {
     }
 
     public static void generate(int start, int contractCount, List<String> dayStrs, int customerCount, int salesStaffCount, int batchSize) {
-        // 设置为数据库连接池数量的1倍以上
-        int threadCount = 32;
+        int threadCount = 1000;
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
 
         int chunkSize = (contractCount - start) / threadCount;
@@ -85,15 +84,11 @@ public class ContractGenerator {
                 con.setAutoCommit(false);
                 pst = con.prepareStatement(sql);
                 for (int i = start; i < end; i++) {
-                    int r = random.nextInt(dayStrs.size());
-                    String dayStr = dayStrs.get(r);
-                    r = random.nextInt(STATES.size());
-                    String state = STATES.get(r);
                     int salesStaffId = random.nextInt(salesStaffCount) + 1;
                     int customerId = random.nextInt(customerCount) + 1;
                     pst.setFloat(1, 0);
-                    pst.setString(2, state);
-                    pst.setString(3, dayStr);
+                    pst.setString(2, STATES.get(random.nextInt(STATES.size())));
+                    pst.setString(3, dayStrs.get(random.nextInt(dayStrs.size())));
                     pst.setInt(4, salesStaffId);
                     pst.setInt(5, customerId);
                     pst.addBatch();

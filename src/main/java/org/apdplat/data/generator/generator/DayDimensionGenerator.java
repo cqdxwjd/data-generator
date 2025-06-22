@@ -20,10 +20,10 @@ import java.util.Map;
 public class DayDimensionGenerator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DayDimensionGenerator.class);
 
-    public static List<String> generate(int startYear, int startMonth, int startDay, int batchSize){
+    public static List<String> generate(int startYear, int startMonth, int startDay, int batchSize) {
         List<String> dayStrs = new ArrayList<>();
         Connection con = MySQLUtils.getConnection();
-        if(con == null){
+        if (con == null) {
             return dayStrs;
         }
         PreparedStatement pst = null;
@@ -34,7 +34,7 @@ public class DayDimensionGenerator {
             pst = con.prepareStatement(sql);
             List<Map<String, Object>> dayData = getDayData(startYear, startMonth, startDay);
             LOGGER.info("天维度数据条数: {}", dayData.size());
-            for(int i=0; i<dayData.size(); i++){
+            for (int i = 0; i < dayData.size(); i++) {
                 Map<String, Object> map = dayData.get(i);
                 dayStrs.add(map.get("day_str").toString());
                 pst.setString(1, map.get("day_str").toString());
@@ -47,7 +47,7 @@ public class DayDimensionGenerator {
                 pst.setInt(8, Integer.parseInt(map.get("year").toString()));
                 pst.addBatch();
 
-                if((i+1) % batchSize == 0) {
+                if ((i + 1) % batchSize == 0) {
                     pst.executeBatch();
                 }
             }
@@ -62,21 +62,21 @@ public class DayDimensionGenerator {
         return dayStrs;
     }
 
-    private static List<Map<String, Object>> getDayData(int startYear, int startMonth, int startDay){
+    private static List<Map<String, Object>> getDayData(int startYear, int startMonth, int startDay) {
         List<Map<String, Object>> data = new ArrayList<>();
         LocalDateTime start = LocalDateTime.of(startYear, startMonth, startDay, 0, 0, 0, 0);
-        LocalDateTime end = LocalDateTime.now();
-        while(start.isBefore(end)) {
+        LocalDateTime end = LocalDateTime.of(2099, 12, 31, 0, 0, 0, 0);
+        while (start.isBefore(end)) {
             String date = TimeUtils.toString(start, "yyyy-MM-dd");
             int dayofweek = start.getDayOfWeek().getValue();
             int dayofyear = start.getDayOfYear();
-            int weekofyear = ((dayofyear-1) / 7)+1;
+            int weekofyear = ((dayofyear - 1) / 7) + 1;
             int month = start.getMonth().getValue();
             int dayofmonth = start.getDayOfMonth();
-            int quarter = ((month-1) / 3) + 1;
+            int quarter = ((month - 1) / 3) + 1;
             int year = start.getYear();
             Map<String, Object> map = new HashMap<>();
-            map.put("day_str", date+" 00:00:00");
+            map.put("day_str", date + " 00:00:00");
             map.put("dayofweek", dayofweek);
             map.put("dayofyear", dayofyear);
             map.put("weekofyear", weekofyear);
@@ -90,7 +90,7 @@ public class DayDimensionGenerator {
         return data;
     }
 
-    public static void clear(){
+    public static void clear() {
         MySQLUtils.clean("day_dimension");
     }
 

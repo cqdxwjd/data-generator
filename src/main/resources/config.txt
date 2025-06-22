@@ -1,3 +1,6 @@
+# 每天新增订单数量
+dailyOrderCount=10000000
+
 #新增数据是MySQL批量提交记录数量
 batchSize=1000
 #订单时间开始年份

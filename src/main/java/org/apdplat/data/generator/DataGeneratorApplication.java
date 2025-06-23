@@ -1,5 +1,6 @@
 package org.apdplat.data.generator;
 
+import org.apdplat.data.generator.generator.DayDimensionGenerator;
 import org.apdplat.data.generator.mysql.MySQLUtils;
 import org.apdplat.data.generator.utils.Config;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -44,7 +46,13 @@ public class DataGeneratorApplication {
         int contractDetailLimit = Config.getIntValue("contractDetailLimit") == -1 ? 100 : Config.getIntValue("contractDetailLimit");
         //合同明细商品最大数量
         int itemQuantityLimit = Config.getIntValue("itemQuantityLimit") == -1 ? 100 : Config.getIntValue("itemQuantityLimit");
-
+        // 起始年月日为当前日期
+        int startYear = LocalDate.now().getYear();
+        int startMonth = LocalDate.now().getMonthValue();
+        int startDay = LocalDate.now().getDayOfMonth();
+        LocalDateTime end = LocalDateTime.of(2099, 12, 31, 0, 0, 0);
+        DayDimensionGenerator.generate(startYear, startMonth, startDay, end, batchSize);
+        
         // 一天是多少秒
         int secondsPerDay = 24 * 60 * 60;
         // 每天新增订单数
@@ -54,10 +62,6 @@ public class DataGeneratorApplication {
         while (true) {
             try {
                 Thread.sleep(1000);
-                // 起始年月日为当前日期
-                int startYear = LocalDate.now().getYear();
-                int startMonth = LocalDate.now().getMonthValue();
-                int startDay = LocalDate.now().getDayOfMonth();
                 String currentDate = String.format("%04d-%02d-%02d 00:00:00", startYear, startMonth, startDay);
                 // 每秒新增订单数
                 int ordersPerSecond = random.nextInt(((dailyOrderCount / secondsPerDay) + 1) * 2);

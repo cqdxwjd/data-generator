@@ -5,6 +5,7 @@ import org.apdplat.data.generator.utils.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,8 @@ public class Generator {
 
         //区域数
         int areaCount = AreaGenerator.generate();
-        List<String> dayStrs = DayDimensionGenerator.generate(startYear, startMonth, startDay, batchSize);
+        LocalDateTime end = LocalDateTime.now();
+        List<String> dayStrs = DayDimensionGenerator.generate(startYear, startMonth, startDay, end, batchSize);
         //客户数
         int customerCount = Config.getIntValue("customerCount") == -1 ? 5000 : Config.getIntValue("customerCount");
         //销售数

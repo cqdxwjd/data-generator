@@ -6,8 +6,8 @@ spec:
   template:
     spec:
       restartPolicy: Never
-      nodeSelector:
-        kubernetes.io/hostname: hmfbd02.novalocal
+      #      nodeSelector:
+      #        kubernetes.io/hostname: hmfbd02.novalocal
       containers:
         - name: data-generator
           # 替换为实际的镜像地址
@@ -16,10 +16,10 @@ spec:
           resources:
             limits:
               cpu: 16000m
-              memory: 9Gi
+              memory: 16Gi
             requests:
               cpu: 8000m
-              memory: 4Gi
+              memory: 8Gi
 #          volumeMounts:
 #            - name: logs-volume
 #              mountPath: /app/logs
